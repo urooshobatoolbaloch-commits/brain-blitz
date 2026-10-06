@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#1d4ed8">
+  <meta name="description" content="Brain Blitz - Fast-paced educational quiz-arcade game by Microsoft Computer & English Language Institute, Khairpur Mirs">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Brain Blitz - Microsoft Institute Khairpur Mirs</title>
+  
+  <link rel="icon" type="image/png" href="icon-192.png">
+  <script>
+    // Load manifest only on http/https/localhost to avoid file:// CORS warning
+    try {
+      if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+        const link = document.createElement('link');
+        link.rel = 'manifest';
+        link.href = 'manifest.json';
+        document.head.appendChild(link);
+      }
+    } catch (e) {}
+  </script>
+
+  <!-- Google Fonts with local fallback -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="theme-default">
+  <div id="app" class="game-container">
+    <!-- Animated particle / star canvas layer -->
+    <canvas id="fx-canvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+    <!-- Top Universal Bar (Sound toggle, Pause, Coins) -->
+    <header class="top-nav-bar">
+      <div class="top-nav-left">
+        <button id="btn-sound-toggle" class="icon-btn" aria-label="Toggle Sound" title="Toggle Sound">
+          <span class="icon-sound-on">🔊</span>
+          <span class="icon-sound-off hide">🔇</span>
+        </button>
+        <button id="btn-how-to-play" class="icon-btn" aria-label="How to play instructions" title="How to Play">
+          <span>❓</span>
+        </button>
+      </div>
+
+      <div class="top-nav-center">
+        <!-- Floating Score / Combo Banner in Play Mode -->
+        <div id="play-mode-pill" class="mode-pill hide">
+          <span id="play-mode-title">Classic</span>
+        </div>
+      </div>
+
+      <div class="top-nav-right">
+        <div class="coin-badge" title="Brain Coins">
+          <span class="coin-icon">🪙</span>
+          <span id="global-coin-count">0</span>
+        </div>
+        <button id="btn-pause" class="icon-btn hide" aria-label="Pause Game" title="Pause">
+          <span>⏸️</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- SCREEN 1: MAIN MENU (#menu) -->
+    <section id="screen-menu" class="screen active">
+      <div class="screen-content menu-content">
+        <div class="brand-hero">
+          <div class="institute-badge">
+            <span class="inst-icon">🏛️</span>
+            <span>Microsoft Institute Khairpur Mirs</span>
+          </div>
+          <h1 class="game-title">
+            BRAIN <span class="title-highlight">BLITZ</span>
+          </h1>
+          <p class="tagline">The Ultimate Quiz & Arcade Challenge</p>
+        </div>
+
+        <!-- Mascot Hero Box -->
+        <div class="mascot-container" id="menu-mascot-box">
+          <div class="owl-speech-bubble" id="menu-speech-bubble">
+            "Welcome! Ready to train your brain today?"
+          </div>
+          <div class="owl-character" id="menu-owl" role="img" aria-label="Professor Hoot, the mascot owl">
+            <!-- Dynamic SVG Owl injected or rendered via CSS/SVG -->
+            <div class="owl-render"></div>
+          </div>
+          <div class="owl-nameplate">Professor Hoot</div>
+        </div>
+
+        <!-- Main Menu CTA Buttons -->
+        <div class="menu-actions">
+          <button id="btn-play-classic" class="action-btn btn-primary btn-pulse">
+            <span class="btn-icon">⚡</span>
+            <div class="btn-text-group">
+              <span class="btn-main-text">PLAY GAME</span>
+              <span class="btn-sub-text">Choose your subject</span>
+            </div>
+          </button>
+
+          <div class="secondary-modes-grid">
+            <button id="btn-daily-challenge" class="mode-card-btn">
+              <div class="card-icon">📅</div>
+              <div class="card-details">
+                <span class="card-title">Daily Blitz</span>
+                <span class="card-desc" id="menu-daily-streak-text">Streak: 0 Days</span>
+              </div>
+            </button>
+
+            <button id="btn-typing-rush" class="mode-card-btn">
+              <div class="card-icon">⌨️</div>
+              <div class="card-details">
+                <span class="card-title">Typing Rush</span>
+                <span class="card-desc">30s Speed Test</span>
+              </div>
+            </button>
+          </div>
+
+          <div class="menu-nav-links">
+            <button id="btn-open-shop" class="nav-chip-btn">
+              <span>🛍️</span> Shop & Outfits
+            </button>
+            <button id="btn-open-scores" class="nav-chip-btn">
+              <span>🏆</span> High Scores
+            </button>
+          </div>
+        </div>
+
+        <footer class="app-footer">
+          <p>Brought to you by Microsoft Institute Khairpur Mirs</p>
+        </footer>
+      </div>
+    </section>
+
+    <!-- SCREEN 2: SUBJECT SELECT (#select) -->
+    <section id="screen-select" class="screen hide">
+      <div class="screen-content">
+        <div class="screen-header">
+          <button class="back-btn" data-target="#menu" aria-label="Go back">‹</button>
+          <h2>Choose Subject</h2>
+          <div class="header-spacer"></div>
+        </div>
+        <p class="section-subtitle">Pick a focus skill or test everything in Mix!</p>
+
+        <div class="subject-grid">
+          <button class="subject-card" data-subject="mix">
+            <div class="subject-icon">🌈</div>
+            <div class="subject-info">
+              <h3>Mix of All</h3>
+              <p>Random blend of all topics</p>
+            </div>
+            <span class="card-chevron">›</span>
+          </button>
+
+          <button class="subject-card" data-subject="computers">
+            <div class="subject-icon">💻</div>
+            <div class="subject-info">
+              <h3>Computers & IT</h3>
+              <p>Hardware, shortcuts & Office</p>
+            </div>
+            <span class="card-chevron">›</span>
+          </button>
+
+          <button class="subject-card" data-subject="web">
+            <div class="subject-icon">🌐</div>
+            <div class="subject-info">
+              <h3>Web Design</h3>
+              <p>HTML5, CSS3 & Responsive layouts</p>
+            </div>
+            <span class="card-chevron">›</span>
+          </button>
+
+          <button class="subject-card" data-subject="graphic">
+            <div class="subject-icon">🎨</div>
+            <div class="subject-info">
+              <h3>Graphic Design</h3>
+              <p>Photoshop, Illustrator & Colors</p>
+            </div>
+            <span class="card-chevron">›</span>
+          </button>
+
+          <button class="subject-card" data-subject="marketing">
+            <div class="subject-icon">📈</div>
+            <div class="subject-info">
+              <h3>Digital Marketing</h3>
+              <p>SEO, Social Media & Ads</p>
+            </div>
+            <span class="card-chevron">›</span>
+          </button>
+
+          <button class="subject-card" data-subject="english">
+            <div class="subject-icon">📚</div>
+            <div class="subject-info">
+              <h3>English Language</h3>
+              <p>Grammar, Tenses & Vocabulary</p>
+            </div>
+            <span class="card-chevron">›</span>
+          </button>
+
+          <button class="subject-card" data-subject="typing">
+            <div class="subject-icon">⌨️</div>
+            <div class="subject-info">
+              <h3>Typing & Office</h3>
+              <p>Home row, WPM & Shortcuts</p>
+            </div>
+            <span class="card-chevron">›</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCREEN 3: GAMEPLAY ARENA (#play) -->
+    <section id="screen-play" class="screen hide">
+      <div class="screen-content play-content">
+        <!-- Live HUD Status -->
+        <div class="game-hud">
+          <!-- Hearts / Lives -->
+          <div class="hud-item hearts-box" id="hud-hearts" aria-label="Remaining Lives: 3">
+            <span class="heart active">❤️</span>
+            <span class="heart active">❤️</span>
+            <span class="heart active">❤️</span>
+          </div>
+
+          <!-- Level & Score -->
+          <div class="hud-item level-box">
+            <span class="hud-label">LEVEL</span>
+            <span id="hud-level-number" class="hud-val">1</span>
+          </div>
+
+          <div class="hud-item score-box">
+            <span class="hud-label">SCORE</span>
+            <span id="hud-score-number" class="hud-val">0</span>
+          </div>
+
+          <!-- Combo Multiplier Display -->
+          <div class="hud-item combo-box" id="hud-combo-badge">
+            <span id="hud-combo-multiplier" class="combo-tag">1x</span>
+          </div>
+        </div>
+
+        <!-- Timer Progress Bar -->
+        <div class="timer-container" aria-label="Time remaining for this question">
+          <div id="timer-bar" class="timer-bar" style="width: 100%;"></div>
+        </div>
+
+        <!-- Question Counter & Category Badge -->
+        <div class="question-meta">
+          <span id="play-subject-badge" class="badge-subject">Computers</span>
+          <span id="play-q-counter" class="badge-counter">Question 1</span>
+        </div>
+
+        <!-- Mascot & Speech Reaction during game -->
+        <div class="play-mascot-row">
+          <div class="owl-character mini-owl" id="play-owl">
+            <div class="owl-render"></div>
+          </div>
+          <div class="owl-speech-bubble play-bubble" id="play-speech-bubble">
+            "Pick the best answer!"
+          </div>
+        </div>
+
+        <!-- Question Card -->
+        <div class="question-card">
+          <h2 id="question-text" class="question-prompt">
+            Loading question...
+          </h2>
+        </div>
+
+        <!-- 4 Answer Options -->
+        <div class="options-grid" id="options-container">
+          <button class="option-btn" data-index="0">
+            <span class="opt-letter">A</span>
+            <span class="opt-text">Option 1</span>
+          </button>
+          <button class="option-btn" data-index="1">
+            <span class="opt-letter">B</span>
+            <span class="opt-text">Option 2</span>
+          </button>
+          <button class="option-btn" data-index="2">
+            <span class="opt-letter">C</span>
+            <span class="opt-text">Option 3</span>
+          </button>
+          <button class="option-btn" data-index="3">
+            <span class="opt-letter">D</span>
+            <span class="opt-text">Option 4</span>
+          </button>
+        </div>
+
+        <!-- Educational Explanation Card (revealed on wrong/timeout) -->
+        <div id="explanation-box" class="explanation-box hide">
+          <span class="explain-icon">💡</span>
+          <p id="explanation-text">Explanation details appear here.</p>
+        </div>
+
+        <!-- Power-Ups Footer Tray -->
+        <div class="powerups-tray">
+          <button id="btn-powerup-5050" class="powerup-btn" aria-label="Use 50/50 Power-Up">
+            <span class="powerup-icon">✂️</span>
+            <span class="powerup-name">50/50</span>
+            <span class="powerup-badge" id="count-5050">3</span>
+          </button>
+
+          <button id="btn-powerup-freeze" class="powerup-btn" aria-label="Use Freeze Timer Power-Up">
+            <span class="powerup-icon">❄️</span>
+            <span class="powerup-name">Freeze</span>
+            <span class="powerup-badge" id="count-freeze">3</span>
+          </button>
+
+          <button id="btn-powerup-heart" class="powerup-btn" aria-label="Use Extra Heart Power-Up">
+            <span class="powerup-icon">💖</span>
+            <span class="powerup-name">+1 Life</span>
+            <span class="powerup-badge" id="count-heart">3</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCREEN 4: TYPING RUSH MINI-GAME (#typing) -->
+    <section id="screen-typing" class="screen hide">
+      <div class="screen-content typing-content">
+        <div class="screen-header">
+          <button class="back-btn" data-target="#menu" aria-label="Quit to menu">‹</button>
+          <h2>Typing Rush</h2>
+          <div class="header-spacer"></div>
+        </div>
+
+        <!-- Typing HUD -->
+        <div class="typing-hud">
+          <div class="typing-hud-card">
+            <span class="hud-label">TIME</span>
+            <span id="typing-timer-display" class="hud-val text-amber">30s</span>
+          </div>
+          <div class="typing-hud-card">
+            <span class="hud-label">WORDS</span>
+            <span id="typing-words-display" class="hud-val text-green">0</span>
+          </div>
+          <div class="typing-hud-card">
+            <span class="hud-label">WPM</span>
+            <span id="typing-wpm-display" class="hud-val text-blue">0</span>
+          </div>
+        </div>
+
+        <!-- Active Word Display Box -->
+        <div class="target-word-card">
+          <p class="target-hint" id="typing-category-hint">Computer Keyword</p>
+          <div class="word-letters-row" id="typing-letters-container">
+            <!-- Letters with typed states injected -->
+          </div>
+        </div>
+
+        <!-- Hidden input for mobile native keyboards & desktop capture -->
+        <input type="text" id="typing-hidden-input" class="typing-hidden-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Type word here">
+
+        <!-- Mobile-friendly On-Screen Keyboard -->
+        <div class="onscreen-keyboard" id="onscreen-keyboard">
+          <!-- Row 1 -->
+          <div class="kb-row">
+            <button class="key-btn" data-key="Q">Q</button>
+            <button class="key-btn" data-key="W">W</button>
+            <button class="key-btn" data-key="E">E</button>
+            <button class="key-btn" data-key="R">R</button>
+            <button class="key-btn" data-key="T">T</button>
+            <button class="key-btn" data-key="Y">Y</button>
+            <button class="key-btn" data-key="U">U</button>
+            <button class="key-btn" data-key="I">I</button>
+            <button class="key-btn" data-key="O">O</button>
+            <button class="key-btn" data-key="P">P</button>
+          </div>
+          <!-- Row 2 -->
+          <div class="kb-row">
+            <button class="key-btn" data-key="A">A</button>
+            <button class="key-btn" data-key="S">S</button>
+            <button class="key-btn" data-key="D">D</button>
+            <button class="key-btn" data-key="F">F</button>
+            <button class="key-btn" data-key="G">G</button>
+            <button class="key-btn" data-key="H">H</button>
+            <button class="key-btn" data-key="J">J</button>
+            <button class="key-btn" data-key="K">K</button>
+            <button class="key-btn" data-key="L">L</button>
+          </div>
+          <!-- Row 3 -->
+          <div class="kb-row">
+            <button class="key-btn" data-key="Z">Z</button>
+            <button class="key-btn" data-key="X">X</button>
+            <button class="key-btn" data-key="C">C</button>
+            <button class="key-btn" data-key="V">V</button>
+            <button class="key-btn" data-key="B">B</button>
+            <button class="key-btn" data-key="N">N</button>
+            <button class="key-btn" data-key="M">M</button>
+            <button class="key-btn key-backspace" data-key="BACKSPACE" aria-label="Backspace">⌫</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCREEN 5: GAME OVER / RESULTS (#results) -->
+    <section id="screen-results" class="screen hide">
+      <div class="screen-content results-content">
+        <div class="results-header">
+          <div class="mascot-container mini" id="results-mascot-box">
+            <div class="owl-speech-bubble" id="results-speech-bubble">
+              "Great effort! Practice makes permanent!"
+            </div>
+            <div class="owl-character" id="results-owl">
+              <div class="owl-render"></div>
+            </div>
+          </div>
+          <h2 id="results-title" class="results-heading">GAME OVER</h2>
+          <p id="results-mode-subtitle" class="results-subtitle">Classic Mode</p>
+        </div>
+
+        <!-- Big Score Card -->
+        <div class="results-score-card">
+          <span class="score-label">FINAL SCORE</span>
+          <span id="res-score" class="score-big">0</span>
+          
+          <div class="results-stats-grid">
+            <div class="stat-pill">
+              <span class="stat-icon">👑</span>
+              <span class="stat-title">High Score</span>
+              <span id="res-best" class="stat-number">0</span>
+            </div>
+
+            <div class="stat-pill">
+              <span class="stat-icon">🪙</span>
+              <span class="stat-title">Coins Won</span>
+              <span id="res-coins" class="stat-number">+0</span>
+            </div>
+
+            <div class="stat-pill">
+              <span class="stat-icon">🎯</span>
+              <span class="stat-title">Accuracy</span>
+              <span id="res-accuracy" class="stat-number">0%</span>
+            </div>
+
+            <div class="stat-pill">
+              <span class="stat-icon">🔥</span>
+              <span class="stat-title">Max Combo</span>
+              <span id="res-max-combo" class="stat-number">0x</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action CTAs -->
+        <div class="results-actions">
+          <button id="btn-results-retry" class="action-btn btn-primary">
+            <span>🔄</span> PLAY AGAIN
+          </button>
+          <button id="btn-results-share" class="action-btn btn-secondary">
+            <span>📢</span> SHARE SCORE
+          </button>
+          <button id="btn-results-menu" class="action-btn btn-ghost" data-target="#menu">
+            <span>🏠</span> MAIN MENU
+          </button>
+        </div>
+
+        <!-- Institute Promotion CTA -->
+        <div class="institute-promo-card">
+          <div class="promo-icon">🎓</div>
+          <div class="promo-info">
+            <h4>Microsoft Institute Khairpur Mirs</h4>
+            <p>Master Computer, IT, Web, Graphic Design & English!</p>
+          </div>
+          <a id="btn-whatsapp-trial" class="btn-whatsapp" href="https://wa.me/923004879545?text=Hello%2C%20I%20played%20Brain%20Blitz%20and%20would%20like%20to%20know%20about%20the%20courses%20at%20Microsoft%20Institute%20Khairpur%20Mirs." target="_blank" rel="noopener">
+            <span>💬</span> Book Free Trial on WhatsApp
+          </a>
+        </div>
+
+        <footer class="app-footer">
+          <p>Brought to you by Microsoft Institute Khairpur Mirs</p>
+        </footer>
+      </div>
+    </section>
+
+    <!-- SCREEN 6: SHOP & OUTFITS (#shop) -->
+    <section id="screen-shop" class="screen hide">
+      <div class="screen-content shop-content">
+        <div class="screen-header">
+          <button class="back-btn" data-target="#menu" aria-label="Back to menu">‹</button>
+          <h2>Professor's Shop</h2>
+          <div class="header-spacer"></div>
+        </div>
+        <p class="section-subtitle">Unlock cool owl accessories & themes using coins!</p>
+
+        <!-- Shop Mascot Preview -->
+        <div class="shop-preview-box">
+          <div class="owl-character" id="shop-owl">
+            <div class="owl-render"></div>
+          </div>
+          <div class="shop-speech-bubble" id="shop-speech-bubble">
+            "Looking sharp! Try on something new!"
+          </div>
+        </div>
+
+        <div class="shop-tabs">
+          <button class="shop-tab active" data-tab="accessories">Owl Outfits</button>
+          <button class="shop-tab" data-tab="themes">Color Themes</button>
+        </div>
+
+        <!-- Accessories Items Grid -->
+        <div id="shop-items-accessories" class="shop-grid">
+          <!-- Dynamically populated via game.js -->
+        </div>
+
+        <!-- Themes Items Grid -->
+        <div id="shop-items-themes" class="shop-grid hide">
+          <!-- Dynamically populated via game.js -->
+        </div>
+      </div>
+    </section>
+
+    <!-- SCREEN 7: HIGH SCORES & ACHIEVEMENTS (#scores) -->
+    <section id="screen-scores" class="screen hide">
+      <div class="screen-content scores-content">
+        <div class="screen-header">
+          <button class="back-btn" data-target="#menu" aria-label="Back to menu">‹</button>
+          <h2>Hall of Fame</h2>
+          <div class="header-spacer"></div>
+        </div>
+        <p class="section-subtitle">Track your high scores & unlock badges</p>
+
+        <div class="scores-tabs">
+          <button class="scores-tab active" data-tab="records">Records</button>
+          <button class="scores-tab" data-tab="badges">Badges</button>
+        </div>
+
+        <div id="tab-records-content" class="records-container">
+          <div class="score-record-card highlight-card">
+            <div class="rec-icon">⚡</div>
+            <div class="rec-details">
+              <span class="rec-title">Classic Best (Mix)</span>
+              <span class="rec-sub">All-time top score</span>
+            </div>
+            <span id="score-best-mix" class="rec-score-value">0</span>
+          </div>
+
+          <div class="score-record-card">
+            <div class="rec-icon">⌨️</div>
+            <div class="rec-details">
+              <span class="rec-title">Typing Rush Best</span>
+              <span class="rec-sub">Most words completed</span>
+            </div>
+            <span id="score-best-typing" class="rec-score-value">0 Words</span>
+          </div>
+
+          <div class="score-record-card">
+            <div class="rec-icon">📅</div>
+            <div class="rec-details">
+              <span class="rec-title">Daily Blitz Streak</span>
+              <span class="rec-sub">Consecutive days played</span>
+            </div>
+            <span id="score-daily-streak" class="rec-score-value">0 Days</span>
+          </div>
+
+          <h3 class="subject-scores-heading">Subject High Scores</h3>
+          <div class="subject-scores-list" id="subject-scores-list">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <div id="tab-badges-content" class="badges-grid hide">
+          <!-- Badges dynamically rendered -->
+        </div>
+      </div>
+    </section>
+
+    <!-- MODAL 1: HOW TO PLAY -->
+    <div id="modal-how" class="modal-overlay hide hidden" hidden role="dialog" aria-modal="true" aria-labelledby="how-title">
+      <div class="modal-card">
+        <h3 id="how-title">How To Play Brain Blitz</h3>
+        <div class="how-steps">
+          <div class="how-step">
+            <span class="step-num">1</span>
+            <div>
+              <strong>Pick a Subject:</strong> Test your knowledge in Computers, Web, Design, Marketing, English or Typing!
+            </div>
+          </div>
+          <div class="how-step">
+            <span class="step-num">2</span>
+            <div>
+              <strong>Answer Fast for Combos:</strong> Quick answers multiply points (up to 5x) and earn bonus coins.
+            </div>
+          </div>
+          <div class="how-step">
+            <span class="step-num">3</span>
+            <div>
+              <strong>Use Power-Ups:</strong> Stuck? Use 50/50, Freeze the clock, or restore an extra heart.
+            </div>
+          </div>
+        </div>
+        <button id="btn-close-how" class="action-btn btn-primary modal-close-btn">GOT IT!</button>
+      </div>
+    </div>
+
+    <!-- MODAL 2: PAUSE MENU -->
+    <div id="modal-pause" class="modal-overlay hide hidden" hidden role="dialog" aria-modal="true" aria-labelledby="pause-title">
+      <div class="modal-card">
+        <h3 id="pause-title">Game Paused</h3>
+        <p class="pause-msg">Catch your breath! Professor Hoot is waiting.</p>
+        <div class="pause-actions">
+          <button id="btn-resume-game" class="action-btn btn-primary">▶️ RESUME</button>
+          <button id="btn-quit-game" class="action-btn btn-ghost" data-target="#menu">🚪 QUIT TO MENU</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL 3: LEVEL UP / CELEBRATION OVERLAY -->
+    <div id="modal-celebrate" class="level-up-banner hide hidden" hidden>
+      <div class="level-up-box">
+        <span class="level-sparkle">✨ LEVEL UP! ✨</span>
+        <h2 id="levelup-title">LEVEL 2</h2>
+        <p>Speed increased! +10 Bonus Coins!</p>
+      </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  </div>
+
+  <!-- Scripts -->
+  <script src="questions.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
